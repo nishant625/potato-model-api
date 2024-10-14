@@ -1,7 +1,6 @@
-
-
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 import uvicorn
 import numpy as np
 from io import BytesIO
@@ -15,6 +14,7 @@ origins = [
     "http://localhost:3000",
     "https://potato-rose.vercel.app/"
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -24,8 +24,12 @@ app.add_middleware(
 )
 
 MODEL = tf.keras.models.load_model("model1.keras")
-
 CLASS_NAMES = ["Early Blight", "Late Blight", "Healthy"]
+
+@app.get("/")
+async def root():
+    # Redirect to FastAPI docs
+    return RedirectResponse(url="/docs")
 
 @app.get("/ping")
 async def ping():
@@ -41,7 +45,7 @@ async def predict(
 ):
     image = read_file_as_image(await file.read())
     img_batch = np.expand_dims(image, 0)
-    
+
     predictions = MODEL.predict(img_batch)
 
     predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
